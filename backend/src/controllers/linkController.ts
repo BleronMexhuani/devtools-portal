@@ -3,7 +3,7 @@ import { Link } from '../models/Link';
 
 /** GET /api/links — Return all links sorted by category then sortOrder */
 export async function getLinks(_req: Request, res: Response): Promise<void> {
-  const links = await Link.find().sort({ category: 1, sortOrder: 1, createdAt: -1 });
+  const links = await Link.find().sort({ categoryOrder: 1, sortOrder: 1, createdAt: -1 });
   res.json(links);
 }
 
@@ -54,6 +54,21 @@ export async function reorderLinks(req: Request, res: Response): Promise<void> {
     updateOne: {
       filter: { _id: item.id },
       update: { $set: { sortOrder: item.sortOrder } },
+    },
+  }));
+
+  await Link.bulkWrite(ops);
+  res.json({ success: true });
+}
+
+/** PATCH /api/links/reorder-categories — Bulk update category orders (admin only) */
+export async function reorderCategories(req: Request, res: Response): Promise<void> {
+  const { orders } = req.body as { orders: { category: string; categoryOrder: number }[] };
+
+  const ops = orders.map((item) => ({
+    updateMany: {
+      filter: { category: item.category },
+      update: { $set: { categoryOrder: item.categoryOrder } },
     },
   }));
 

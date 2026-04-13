@@ -32,6 +32,7 @@ describe('LinkForm', () => {
       title: 'Test',
       url: 'https://test.com',
       sortOrder: 0,
+      categoryOrder: 0,
       createdAt: '',
       updatedAt: '',
     };
@@ -48,6 +49,7 @@ describe('LinkForm', () => {
       icon: '🐙',
       category: 'Dev',
       sortOrder: 5,
+      categoryOrder: 0,
       createdAt: '',
       updatedAt: '',
     };

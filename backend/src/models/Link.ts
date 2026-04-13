@@ -7,6 +7,7 @@ export interface ILink extends Document {
   icon?: string;
   category?: string;
   sortOrder: number;
+  categoryOrder: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,10 +20,11 @@ const linkSchema = new Schema<ILink>(
     icon: { type: String, trim: true, maxlength: 100 },
     category: { type: String, trim: true, maxlength: 100 },
     sortOrder: { type: Number, default: 0 },
+    categoryOrder: { type: Number, default: 0 },
   },
   { timestamps: true },
 );
 
-linkSchema.index({ category: 1, sortOrder: 1 });
+linkSchema.index({ categoryOrder: 1, category: 1, sortOrder: 1 });
 
 export const Link = mongoose.model<ILink>('Link', linkSchema);

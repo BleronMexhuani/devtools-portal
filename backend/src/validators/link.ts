@@ -27,3 +27,15 @@ export const reorderSchema = z.object({
     .min(1)
     .max(500),
 });
+
+export const reorderCategoriesSchema = z.object({
+  orders: z
+    .array(
+      z.object({
+        category: z.string().min(1).max(100),
+        categoryOrder: z.number().int().min(0),
+      }),
+    )
+    .min(1)
+    .max(100),
+});

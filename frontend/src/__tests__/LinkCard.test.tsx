@@ -11,6 +11,7 @@ const baseLink: Link = {
   icon: '🐙',
   category: 'Development',
   sortOrder: 0,
+  categoryOrder: 0,
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z',
 };

@@ -71,6 +71,16 @@ export async function reorderLinks(orders: { id: string; sortOrder: number }[]):
   return handleResponse<void>(res);
 }
 
+/** Bulk reorder categories (admin) */
+export async function reorderCategories(orders: { category: string; categoryOrder: number }[]): Promise<void> {
+  const res = await fetch(`${API_URL}/links/reorder-categories`, {
+    method: 'PATCH',
+    headers: authHeaders(),
+    body: JSON.stringify({ orders }),
+  });
+  return handleResponse<void>(res);
+}
+
 /** Upload an icon file (admin) — returns the icon URL */
 export async function uploadIcon(file: File): Promise<string> {
   const token = localStorage.getItem('token');

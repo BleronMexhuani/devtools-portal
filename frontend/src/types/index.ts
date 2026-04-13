@@ -6,6 +6,7 @@ export interface Link {
   icon?: string;
   category?: string;
   sortOrder: number;
+  categoryOrder: number;
   createdAt: string;
   updatedAt: string;
 }
