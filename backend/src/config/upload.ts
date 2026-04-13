@@ -9,7 +9,8 @@ if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
-const ALLOWED_MIME_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml', 'image/webp'];
+// SVG intentionally excluded — can contain <script> tags (stored XSS)
+const ALLOWED_MIME_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
 
 const storage = multer.diskStorage({
@@ -29,7 +30,7 @@ function fileFilter(
   if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Only image files (PNG, JPEG, GIF, SVG, WebP) are allowed'));
+    cb(new Error('Only image files (PNG, JPEG, GIF, WebP) are allowed'));
   }
 }
 

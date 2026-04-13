@@ -5,9 +5,11 @@ metadata:
   namespace: devtools-portal
 type: Opaque
 stringData:
-  JWT_SECRET: change-me-to-a-secure-random-string
-  ADMIN_EMAIL: admin@example.com
-  ADMIN_PASSWORD: changeme123
+  # IMPORTANT: Replace these placeholders before deploying!
+  # Use: kubectl create secret generic backend-secrets --from-literal=JWT_SECRET=<random-32+chars> ...
+  JWT_SECRET: REPLACE_WITH_SECURE_RANDOM_STRING_32_CHARS_MIN
+  ADMIN_EMAIL: REPLACE_WITH_ADMIN_EMAIL
+  ADMIN_PASSWORD: REPLACE_WITH_STRONG_PASSWORD
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -24,6 +26,9 @@ spec:
       labels:
         app: backend
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
         - name: backend
           image: devtools-portal-backend:latest

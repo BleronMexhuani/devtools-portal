@@ -22,7 +22,7 @@ services:
     environment:
       PORT: 4000
       MONGODB_URI: mongodb://mongodb:27017/devtools-portal
-      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-secure-random-string}
+      JWT_SECRET: ${JWT_SECRET:-devlocal-change-me-to-a-secure-random-string-in-production}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme123}
       CORS_ORIGIN: http://localhost

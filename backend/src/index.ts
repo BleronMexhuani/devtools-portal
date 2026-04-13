@@ -17,8 +17,12 @@ app.use(helmet());
 app.use(cors({ origin: env.CORS_ORIGIN }));
 app.use(express.json({ limit: '10kb' }));
 
-// Serve uploaded icon files
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+// Serve uploaded icon files with security headers
+app.use('/uploads', (_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'");
+  next();
+}, express.static(path.join(__dirname, '..', 'uploads')));
 
 // Health check
 app.get('/api/health', (_req, res) => {
