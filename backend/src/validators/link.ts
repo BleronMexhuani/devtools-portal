@@ -15,3 +15,15 @@ export const loginSchema = z.object({
   email: z.string().email('Must be a valid email'),
   password: z.string().min(1, 'Password is required'),
 });
+
+export const reorderSchema = z.object({
+  orders: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        sortOrder: z.number().int().min(0),
+      }),
+    )
+    .min(1)
+    .max(500),
+});

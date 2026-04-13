@@ -45,3 +45,18 @@ export async function deleteLink(req: Request, res: Response): Promise<void> {
   }
   res.status(204).send();
 }
+
+/** PATCH /api/links/reorder — Bulk update sort orders (admin only) */
+export async function reorderLinks(req: Request, res: Response): Promise<void> {
+  const { orders } = req.body as { orders: { id: string; sortOrder: number }[] };
+
+  const ops = orders.map((item) => ({
+    updateOne: {
+      filter: { _id: item.id },
+      update: { $set: { sortOrder: item.sortOrder } },
+    },
+  }));
+
+  await Link.bulkWrite(ops);
+  res.json({ success: true });
+}

@@ -112,7 +112,7 @@ export function LinkForm({ initial, onSubmit, onCancel }: LinkFormProps) {
           <div className="mt-1 flex items-center gap-3">
             {iconPreview && (
               <img
-                src={form.icon?.startsWith('/') ? `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:4000'}${form.icon}` : form.icon}
+                src={form.icon}
                 alt="Icon preview"
                 className="h-10 w-10 rounded object-cover border border-gray-200"
               />
@@ -150,15 +150,6 @@ export function LinkForm({ initial, onSubmit, onCancel }: LinkFormProps) {
             onChange={(e) => update('category', e.target.value)}
             className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           />
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700">Sort Order</label>
-            <input
-              type="number"
-              value={form.sortOrder}
-              onChange={(e) => update('sortOrder', parseInt(e.target.value) || 0)}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            />
-          </div>
         </div>
       </div>
       <div className="flex gap-3 pt-2">

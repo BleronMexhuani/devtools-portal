@@ -1,13 +1,36 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useLinks } from '../hooks/useLinks';
 import { LinkForm } from '../components/LinkForm';
-import { createLink, updateLink, deleteLink } from '../services/api';
+import { createLink, updateLink, deleteLink, reorderLinks } from '../services/api';
 import type { Link, LinkFormData } from '../types';
+
+/** Group links by category */
+function groupByCategory(links: Link[]): Record<string, Link[]> {
+  const groups: Record<string, Link[]> = {};
+  for (const link of links) {
+    const cat = link.category || 'Uncategorized';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(link);
+  }
+  return groups;
+}
+
+function IconDisplay({ icon, title }: { icon?: string; title: string }) {
+  const isImage = icon && (icon.startsWith('/uploads/') || icon.startsWith('http'));
+  if (isImage) {
+    return <img src={icon} alt="" className="h-8 w-8 rounded object-cover" />;
+  }
+  return <span className="text-lg">{icon || title.charAt(0)}</span>;
+}
 
 export function AdminPage() {
   const { links, loading, error, reload } = useLinks();
   const [editing, setEditing] = useState<Link | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const dragItem = useRef<{ id: string; category: string } | null>(null);
+  const dragOverItem = useRef<{ id: string; category: string } | null>(null);
+
+  const grouped = groupByCategory(links);
 
   async function handleCreate(data: LinkFormData) {
     await createLink(data);
@@ -26,6 +49,58 @@ export function AdminPage() {
     if (!confirm('Delete this link?')) return;
     await deleteLink(id);
     await reload();
+  }
+
+  function handleDragStart(linkId: string, category: string) {
+    dragItem.current = { id: linkId, category };
+  }
+
+  function handleDragOver(e: React.DragEvent, linkId: string, category: string) {
+    e.preventDefault();
+    dragOverItem.current = { id: linkId, category };
+  }
+
+  async function handleDrop(e: React.DragEvent, category: string) {
+    e.preventDefault();
+    if (!dragItem.current || !dragOverItem.current) return;
+
+    // Only allow reorder within the same category
+    if (dragItem.current.category !== category || dragOverItem.current.category !== category) {
+      dragItem.current = null;
+      dragOverItem.current = null;
+      return;
+    }
+
+    const categoryLinks = [...(grouped[category] || [])];
+    const fromIndex = categoryLinks.findIndex((l) => l._id === dragItem.current!.id);
+    const toIndex = categoryLinks.findIndex((l) => l._id === dragOverItem.current!.id);
+
+    if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) {
+      dragItem.current = null;
+      dragOverItem.current = null;
+      return;
+    }
+
+    // Reorder the array
+    const [moved] = categoryLinks.splice(fromIndex, 1);
+    categoryLinks.splice(toIndex, 0, moved);
+
+    // Build new sort orders
+    const orders = categoryLinks.map((link, index) => ({
+      id: link._id,
+      sortOrder: index,
+    }));
+
+    dragItem.current = null;
+    dragOverItem.current = null;
+
+    try {
+      await reorderLinks(orders);
+      await reload();
+    } catch {
+      // Reload to reset to server state
+      await reload();
+    }
   }
 
   return (
@@ -68,66 +143,74 @@ export function AdminPage() {
         <div className="rounded-lg bg-red-50 p-4 text-red-700 mb-4">{error}</div>
       )}
 
-      {!loading && (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Link
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Category
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Order
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {links.map((link) => (
-                <tr key={link._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg">{link.icon || '🔗'}</span>
-                      <div>
-                        <div className="font-medium text-gray-900">{link.title}</div>
-                        <div className="text-sm text-gray-500 truncate max-w-xs">{link.url}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{link.category || '—'}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{link.sortOrder}</td>
-                  <td className="px-6 py-4 text-right">
+      {!loading && links.length === 0 && (
+        <div className="rounded-xl border border-gray-200 bg-white p-12 text-center text-gray-500 shadow-sm">
+          No links yet. Click &quot;+ Add Link&quot; to create one.
+        </div>
+      )}
+
+      {!loading &&
+        Object.entries(grouped).map(([category, categoryLinks]) => (
+          <div key={category} className="mb-6">
+            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-gray-500">
+              {category}
+            </h2>
+            <div
+              className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+              onDrop={(e) => handleDrop(e, category)}
+              onDragOver={(e) => e.preventDefault()}
+            >
+              {categoryLinks.map((link, index) => (
+                <div
+                  key={link._id}
+                  draggable
+                  onDragStart={() => handleDragStart(link._id, category)}
+                  onDragOver={(e) => handleDragOver(e, link._id, category)}
+                  className={`flex items-center gap-4 px-5 py-3 hover:bg-gray-50 cursor-grab active:cursor-grabbing transition ${
+                    index > 0 ? 'border-t border-gray-100' : ''
+                  }`}
+                >
+                  {/* Drag handle */}
+                  <span className="text-gray-300 hover:text-gray-500 select-none" title="Drag to reorder">
+                    ⠿
+                  </span>
+
+                  {/* Position number */}
+                  <span className="w-6 text-center text-xs font-medium text-gray-400">
+                    {index + 1}
+                  </span>
+
+                  {/* Icon */}
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-50">
+                    <IconDisplay icon={link.icon} title={link.title} />
+                  </div>
+
+                  {/* Title & URL */}
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-gray-900">{link.title}</div>
+                    <div className="text-sm text-gray-400 truncate">{link.url}</div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => setEditing(link)}
-                      className="mr-3 text-sm font-medium text-indigo-600 hover:text-indigo-800"
+                      className="rounded px-2.5 py-1 text-sm font-medium text-indigo-600 hover:bg-indigo-50 transition"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(link._id)}
-                      className="text-sm font-medium text-red-600 hover:text-red-800"
+                      className="rounded px-2.5 py-1 text-sm font-medium text-red-600 hover:bg-red-50 transition"
                     >
                       Delete
                     </button>
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-              {links.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
-                    No links yet. Click &quot;+ Add Link&quot; to create one.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+            </div>
+          </div>
+        ))}
     </div>
   );
 }

@@ -19,7 +19,6 @@ describe('LinkForm', () => {
     expect(screen.getByText(/url \*/i)).toBeInTheDocument();
     expect(screen.getByText('Description')).toBeInTheDocument();
     expect(screen.getByText('Category')).toBeInTheDocument();
-    expect(screen.getByText('Sort Order')).toBeInTheDocument();
   });
 
   it('shows "Create Link" button for new links', () => {

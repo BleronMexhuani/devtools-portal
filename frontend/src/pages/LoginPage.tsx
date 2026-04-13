@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { login } from '../services/api';
 
@@ -8,8 +8,13 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const { setAuth } = useAuth();
+  const { setAuth, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect to admin dashboard if already logged in
+  if (isAuthenticated) {
+    return <Navigate to="/admin" replace />;
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

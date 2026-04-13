@@ -9,10 +9,7 @@ export function LinkCard({ link }: LinkCardProps) {
   const isEmoji = link.icon && !isImageUrl;
 
   function resolveIconSrc(icon: string): string {
-    if (icon.startsWith('/uploads/')) {
-      const base = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:4000';
-      return `${base}${icon}`;
-    }
+    // /uploads/ paths are served by nginx proxy in Docker, or directly by Express in dev
     return icon;
   }
 
