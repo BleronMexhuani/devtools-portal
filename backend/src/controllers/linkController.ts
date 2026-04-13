@@ -3,7 +3,7 @@ import { Link } from '../models/Link';
 
 /** GET /api/links — Return all links sorted by category then sortOrder */
 export async function getLinks(_req: Request, res: Response): Promise<void> {
-  const links = await Link.find().sort({ categoryOrder: 1, sortOrder: 1, createdAt: -1 });
+  const links = await Link.find().sort({ categoryOrder: 1, category: 1, sortOrder: 1, createdAt: -1 });
   res.json(links);
 }
 
